@@ -16,6 +16,7 @@ import lombok.extern.jbosslog.JBossLog;
 import org.apache.commons.io.IOUtils;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 import java.util.StringJoiner;
 
 @JBossLog
@@ -56,6 +57,14 @@ public class AberturaOsEvent implements EventoProgramavelJava {
             codregistro
         );
 
+        if(faos == null) {
+            String mensagemErro = new StringBuilder()
+                .append("Não foi possível preencher campos de formulário formatado de Abertura de OS.")
+                .append("Formulário não foi encontrado.")
+                .toString();
+            throw new Exception(mensagemErro);
+        }
+
         BigDecimal codparc = vo.asBigDecimal("CODPARC");
         try {
             Parceiro p = parceiroQuery.findOne(codparc);
@@ -93,7 +102,7 @@ public class AberturaOsEvent implements EventoProgramavelJava {
                 .add("Cód. Modelo: " + fmtReqField(faos.getCODMODELO()))
                 .add("---")
                 .add("Horímetro: " + fmtReqField(faos.getHORIMETRO()))
-                .add("Descrição do problema: " + fmtReqField(faos.getSOLICITACAO()))
+                .add("Descrição do problema: " + System.lineSeparator() + fmtReqField(faos.getPROBLEMA()))
                 .toString()
                 .toCharArray()
         );
@@ -103,7 +112,7 @@ public class AberturaOsEvent implements EventoProgramavelJava {
     public String fmtReqField(Object field) {
         try {
             if(field instanceof char[]) {
-                return String.valueOf(field);
+                return new String((char[]) field);
             }
             return field.toString();
         } catch (Exception e) {
@@ -130,6 +139,14 @@ public class AberturaOsEvent implements EventoProgramavelJava {
                 idinsttar,
                 codregistro
             );
+
+            if(faos == null) {
+                String mensagemErro = new StringBuilder()
+                    .append("Não foi possível preencher campos de formulário formatado de Abertura de OS.")
+                    .append("Formulário não foi encontrado.")
+                    .toString();
+                throw new Exception(mensagemErro);
+            }
 
             if(modifingFields.isModifing("CODPARC")) {
                 BigDecimal codparc = vo.asBigDecimal("CODPARC");
