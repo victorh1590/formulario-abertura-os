@@ -213,6 +213,17 @@
             <version>4.22</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>br.com.sankhya</groupId>
+            <artifactId>sanws</artifactId>
+            <version>4.22</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jdom</groupId>
+            <artifactId>jdom</artifactId>
+            <version>1.0</version>
+        </dependency>
 
         <dependency>
             <groupId>commons-io</groupId>
