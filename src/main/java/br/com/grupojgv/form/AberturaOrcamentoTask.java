@@ -8,6 +8,7 @@ import br.com.sankhya.extensions.flow.TarefaJava;
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.wrapper.JapeFactory;
 import br.com.sankhya.jape.wrapper.JapeWrapper;
+import br.com.sankhya.modelcore.util.DynamicEntityNames;
 import com.sankhya.util.BigDecimalUtil;
 import lombok.extern.jbosslog.JBossLog;
 
@@ -30,9 +31,9 @@ public class AberturaOrcamentoTask implements TarefaJava {
         try {
             BigDecimal codparc = BigDecimalUtil.getBigDecimal(aberturaOS.getCampo("CODPARC"));
             BigDecimal codveiculo = BigDecimalUtil.getBigDecimal(aberturaOS.getCampo("CODVEICULO"));
-            BigDecimal codmarca = BigDecimalUtil.getBigDecimal(aberturaOS.getCampo("CODMARCA"));
-            BigDecimal codmodelo = BigDecimalUtil.getBigDecimal(aberturaOS.getCampo("CODMODELO"));
-            String solicitacao = StringUtils.asNullOrString(aberturaOS.getCampo("SOLICITACAO"));
+//            BigDecimal codmarca = BigDecimalUtil.getBigDecimal(aberturaOS.getCampo("CODMARCA"));
+//            BigDecimal codmodelo = BigDecimalUtil.getBigDecimal(aberturaOS.getCampo("CODMODELO"));
+//            String solicitacao = StringUtils.asNullOrString(aberturaOS.getCampo("SOLICITACAO"));
 
             BigDecimal codtipoper = new BigDecimal(1004);
             BigDecimal adcodoat = new BigDecimal(6);
@@ -40,7 +41,7 @@ public class AberturaOrcamentoTask implements TarefaJava {
             BigDecimal codEmp = new BigDecimal(4);
             String tipMov = "P";
             Timestamp dhAgora = new Timestamp(System.currentTimeMillis());
-            String hashcode = String.valueOf(System.currentTimeMillis());
+//            String hashcode = String.valueOf(System.currentTimeMillis());
             BigDecimal codcencus = BigDecimalUtil.strToBigDecimalDef("010401005", BigDecimal.ZERO);
             BigDecimal codnat = BigDecimalUtil.strToBigDecimalDef("20301001", BigDecimal.ZERO);
             BigDecimal codtipvenda = new BigDecimal(25);
@@ -49,7 +50,7 @@ public class AberturaOrcamentoTask implements TarefaJava {
 
             QueryExecutor query = contexto.getQuery();
 
-            JapeWrapper cabDAO = JapeFactory.dao("CabecalhoNota");
+            JapeWrapper cabDAO = JapeFactory.dao(DynamicEntityNames.CABECALHO_NOTA);
             DynamicVO noteVO = cabDAO.create()
                 .set("CODEMP", codEmp)
                 .set("CODPARC", codparc)
@@ -89,17 +90,18 @@ public class AberturaOrcamentoTask implements TarefaJava {
 //                dhAgora
 //            };
             query.update(
-            "INSERT INTO TGFCAB_TNF (" +
-                "TNF_IDINSTPRN, " +
-                "TNF_IDINSTTAR, " +
+            "INSERT INTO TGFCAB (" +
+//            "INSERT INTO TGFCAB_TNF (" +
+//                "TNF_IDINSTPRN, " +
+//                "TNF_IDINSTTAR, " +
+//                "TNF_HASHCODE, " +
+//                "TNF_DHCRIACAO, " +
                 "CODPARC, " +
                 "CODVEICULO, " +
                 "CODTIPOPER, " +
                 "AD_CODOAT, " +
-                "TNF_HASHCODE, " +
                 "TIPMOV, " +
                 "CODEMP, " +
-                "TNF_DHCRIACAO, " +
                 "DTNEG, " +
                 "NUNOTA, " +
                 "CODCENCUS, " +
@@ -109,16 +111,16 @@ public class AberturaOrcamentoTask implements TarefaJava {
                 "NUMNOTA" +
                 ") " +
                 "VALUES (" +
-                contexto.getIdInstanceProcesso() + ", " +
-                contexto.getIdInstanceTarefa() + ", " +
+//                contexto.getIdInstanceProcesso() + ", " +
+//                contexto.getIdInstanceTarefa() + ", " +
+//                hashcode + ", " +
+//                "SYSDATE" + ", " +
                 codparc + ", " +
                 codveiculo  + ", " +
                 codtipoper + ", " +
                 adcodoat + ", " +
-                hashcode + ", " +
                 "'" + tipMov + "', " +
                 codEmp + ", " +
-                "SYSDATE" + ", " +
                 "SYSDATE" + ", " +
                 realNuNota + ", " +
                 codcencus + ", " +

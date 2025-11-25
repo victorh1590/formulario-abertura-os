@@ -51,11 +51,19 @@ public class AberturaOsEvent implements EventoProgramavelJava {
         BigDecimal idinsttar = vo.asBigDecimal("IDINSTTAR");
         BigDecimal codregistro = vo.asBigDecimal("CODREGISTRO");
 
+        log.info("IDINSTPRN = " + idinstprn);
+        log.info("IDINSTTAR = " + idinsttar);
+        log.info("CODREGISTRO = " + codregistro);
+
         FormAberturaOS faos = faosQuery.buscar(
             idinstprn,
             idinsttar,
             codregistro
         );
+
+        if(idinstprn == null || idinsttar == null || idinstprn.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new Exception("Não foi possível obter identificador de processo.");
+        }
 
         if(faos == null) {
             String mensagemErro = new StringBuilder()
@@ -131,6 +139,14 @@ public class AberturaOsEvent implements EventoProgramavelJava {
         BigDecimal idinstprn = vo.asBigDecimal("IDINSTPRN");
         BigDecimal idinsttar = vo.asBigDecimal("IDINSTTAR");
         BigDecimal codregistro = vo.asBigDecimal("CODREGISTRO");
+
+        log.info("IDINSTPRN = " + idinstprn);
+        log.info("IDINSTTAR = " + idinsttar);
+        log.info("CODREGISTRO = " + codregistro);
+
+        if(idinstprn == null || idinsttar == null || idinstprn.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new Exception("Não foi possível obter identificador de processo.");
+        }
 
         ModifingFields modifingFields = event.getModifingFields();
         if(modifingFields.isModifingAny("CODVEICULO,CODPARC")) {
