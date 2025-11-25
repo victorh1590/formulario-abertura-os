@@ -1,11 +1,14 @@
 package br.com.grupojgv.helpers;
 
+import br.com.sankhya.jape.EntityFacade;
 import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.vo.DynamicVO;
+import br.com.sankhya.jape.vo.PrePersistEntityState;
 import br.com.sankhya.jape.wrapper.JapeFactory;
 import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.comercial.BarramentoRegra;
 import br.com.sankhya.modelcore.comercial.centrais.CACHelper;
+import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import br.com.sankhya.modelcore.util.SPBeanUtils;
 import br.com.sankhya.ws.ServiceContext;
 import com.sankhya.util.TimeUtils;
@@ -14,7 +17,6 @@ import org.jdom.Element;
 import java.math.BigDecimal;
 
 public class GestorPedidoVenda {
-
     /**
      * Cria apenas o cabeçalho da Nota/Pedido (TGFCAB) contendo 1 item.
      *
@@ -62,6 +64,7 @@ public class GestorPedidoVenda {
             Element cabecalhoXml = new Element("Cabecalho");
 
             // Campos obrigatórios mínimos
+            XMLUtils.addContentElement(cabecalhoXml, "NUNOTA", 0); // NUNOTA
             XMLUtils.addContentElement(cabecalhoXml, "CODTIPOPER", codTop); // TOP
             XMLUtils.addContentElement(cabecalhoXml, "CODPARC", codParc);   // Parceiro
             XMLUtils.addContentElement(cabecalhoXml, "CODEMP", codEmp);     // Empresa
@@ -123,7 +126,7 @@ public class GestorPedidoVenda {
     /**
      * Cria apenas o cabeçalho da Nota/Pedido (TGFCAB).
      *
-     * @param codTop Código do Tipo de Operação (TGFTOP)
+     * @param codTipoOper Código do Tipo de Operação (TGFTOP)
      * @param codParc Código do Parceiro (TGFPAR)
      * @param codEmp Código da Empresa (TSIEMP)
      * @param codNat Código da Natureza (TGFNAT) - Opcional, pode passar null se a TOP preencher
@@ -131,38 +134,48 @@ public class GestorPedidoVenda {
      * @return O NUNOTA gerado.
      * @throws Exception Em caso de erro nas regras de negócio.
      */
-    public BigDecimal criarCabecalho(BigDecimal codTop, BigDecimal codParc, BigDecimal codEmp, BigDecimal codNat, BigDecimal codCenCus) throws Exception {
+    public BigDecimal criarCabecalho(
+        BigDecimal codTipoOper,
+        BigDecimal codParc,
+        BigDecimal codEmp,
+        BigDecimal codNat,
+        BigDecimal codCenCus
+    ) throws Exception {
         JapeSession.SessionHandle hnd = null;
         BigDecimal nuNotaGerada = null;
 
         try {
             hnd = JapeSession.open();
-
-            // Prepara o contexto (simula ambiente web/tela)
             prepararContexto();
-
             CACHelper cacHelper = new CACHelper();
-
-            // Montagem do XML do Cabeçalho
-            Element cabecalhoXml = new Element("Cabecalho");
-            XMLUtils.addContentElement(cabecalhoXml, "CODTIPOPER", codTop);
-            XMLUtils.addContentElement(cabecalhoXml, "CODPARC", codParc);
-            XMLUtils.addContentElement(cabecalhoXml, "CODEMP", codEmp);
-            XMLUtils.addContentElement(cabecalhoXml, "DTNEG", TimeUtils.formataDDMMYYYY(TimeUtils.getNow()));
-            XMLUtils.addContentElement(cabecalhoXml, "TIPMOV", "P"); // P = Pedido, V = Venda, etc.
+            EntityFacade dwfFacade = EntityFacadeFactory.getDWFFacade();
+            DynamicVO cabVO = (DynamicVO) dwfFacade.getDAOInstance("CabecalhoNota").getDefaultValueObjectInstance();
+            cabVO.setProperty("CODTIPOPER", codTipoOper);
+            cabVO.setProperty("CODPARC", codParc);
+            cabVO.setProperty("CODEMP", codEmp);
+            cabVO.setProperty("TIPMOV", "P"); // P = Pedido
+            cabVO.setProperty("DTNEG", new java.sql.Timestamp(System.currentTimeMillis()));
+            cabVO.setProperty("NUMNOTA", BigDecimal.ZERO); // Zero para numeração automática
 
             if (codNat != null) {
-                XMLUtils.addContentElement(cabecalhoXml, "CODNAT", codNat);
+                cabVO.setProperty("CODNAT", codNat);
             }
             if (codCenCus != null) {
-                XMLUtils.addContentElement(cabecalhoXml, "CODCENCUS", codCenCus);
+                cabVO.setProperty("CODCENCUS", codCenCus);
             }
-
-            // Chama o serviço para criar o cabeçalho e rodar as regras (Triggers, Validadores)
-            BarramentoRegra regraCab = cacHelper.incluirAlterarCabecalho(ServiceContext.getCurrent(), cabecalhoXml);
-
-            // Extrai o NUNOTA gerado do retorno do Barramento
-            nuNotaGerada = new BigDecimal(regraCab.getDadosBarramento().getPksEnvolvidas().iterator().next().getValues()[0].toString());
+            PrePersistEntityState cabState = PrePersistEntityState.build(
+                dwfFacade,
+                "CabecalhoNota",
+                cabVO
+            );
+            BarramentoRegra regraCab = cacHelper.incluirAlterarCabecalho(
+                AuthenticationInfo.getCurrent(),
+                cabState
+            );
+            nuNotaGerada = (BigDecimal) cabState.getNewVO().getProperty("NUNOTA");
+            if (nuNotaGerada == null && !regraCab.getDadosBarramento().getPksEnvolvidas().isEmpty()) {
+                nuNotaGerada = new BigDecimal(regraCab.getDadosBarramento().getPksEnvolvidas().iterator().next().getValues()[0].toString());
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -229,15 +242,11 @@ public class GestorPedidoVenda {
      */
     private void prepararContexto() throws Exception {
         ServiceContext sctx = ServiceContext.getCurrent();
-
-        // Se não houver contexto (ex: rodando em thread separada ou job), cria um fake
         if (sctx == null) {
             sctx = new ServiceContext(null);
             sctx.setAutentication(AuthenticationInfo.getCurrent());
             ServiceContext.makeCurrent(sctx);
         }
-
-        // Propriedades mágicas que o CACHelper verifica para saber o ambiente
         SPBeanUtils.setupContext(sctx);
         CACHelper.setupContext(sctx);
     }

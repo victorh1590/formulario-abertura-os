@@ -4,7 +4,7 @@
   <groupId>br.com.grupojgv</groupId>
   <artifactId>flow-abertura-os</artifactId>
   <name>flow-abertura-os</name>
-  <version>79.0.0</version>
+  <version>84.0.0</version>
   <url>http://maven.apache.org</url>
   <build>
     <plugins>
@@ -190,6 +190,12 @@
     <dependency>
       <groupId>br.com.sankhya</groupId>
       <artifactId>mge-modelcore</artifactId>
+      <version>4.22</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>br.com.sankhya</groupId>
+      <artifactId>sanws</artifactId>
       <version>4.22</version>
       <scope>provided</scope>
     </dependency>
