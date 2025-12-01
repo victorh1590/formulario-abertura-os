@@ -139,7 +139,9 @@ public class GestorPedidoVenda {
         BigDecimal codParc,
         BigDecimal codEmp,
         BigDecimal codNat,
-        BigDecimal codCenCus
+        BigDecimal codCenCus,
+        BigDecimal codTipVenda,
+        BigDecimal adCodTipoDeOs
     ) throws Exception {
         JapeSession.SessionHandle hnd = null;
         BigDecimal nuNotaGerada = null;
@@ -153,9 +155,11 @@ public class GestorPedidoVenda {
             cabVO.setProperty("CODTIPOPER", codTipoOper);
             cabVO.setProperty("CODPARC", codParc);
             cabVO.setProperty("CODEMP", codEmp);
-            cabVO.setProperty("TIPMOV", "P"); // P = Pedido
+            cabVO.setProperty("TIPMOV", "P");
             cabVO.setProperty("DTNEG", new java.sql.Timestamp(System.currentTimeMillis()));
-            cabVO.setProperty("NUMNOTA", BigDecimal.ZERO); // Zero para numeração automática
+            cabVO.setProperty("NUMNOTA", BigDecimal.ZERO);
+            cabVO.setProperty("CODTIPVENDA", codTipVenda);
+            cabVO.setProperty("AD_CODTIPODEOS", adCodTipoDeOs);
 
             if (codNat != null) {
                 cabVO.setProperty("CODNAT", codNat);

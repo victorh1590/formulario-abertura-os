@@ -34,6 +34,8 @@ public class AberturaOrcamentoTask implements TarefaJava {
             BigDecimal codemp = new BigDecimal(4);
             BigDecimal codnat = BigDecimalUtil.strToBigDecimalDef("20301001", BigDecimal.ZERO);
             BigDecimal codcencus = BigDecimalUtil.strToBigDecimalDef("010401005", BigDecimal.ZERO);
+            BigDecimal codtipvenda = BigDecimalUtil.strToBigDecimalDef("25", BigDecimal.ZERO);
+            BigDecimal adcodtipodeos = BigDecimalUtil.strToBigDecimalDef("2", BigDecimal.ZERO);
 
 //            BigDecimal adcodoat = new BigDecimal(6);
 //            String tipMov = "P";
@@ -43,11 +45,35 @@ public class AberturaOrcamentoTask implements TarefaJava {
 //            BigDecimal adcodtipodeos = new BigDecimal(2);
 //            BigDecimal numnota = new BigDecimal(0);
 
-//            QueryExecutor query = contexto.getQuery();
 
             GestorPedidoVenda gestorPedidoVenda = new GestorPedidoVenda();
-            BigDecimal nunota = gestorPedidoVenda.criarCabecalho(codtipoper, codparc, codemp, codnat, codcencus);
+            BigDecimal nunota = gestorPedidoVenda.criarCabecalho(
+                codtipoper,
+                codparc,
+                codemp,
+                codnat,
+                codcencus,
+                codtipvenda,
+                adcodtipodeos
+            );
             log.infov("NUNOTA criado = {0}", nunota);
+
+            QueryExecutor query = contexto.getQuery();
+            String sqlInsert = "INSERT INTO TGFCAB_TNF (" +
+                "TNF_IDINSTPRN, " +
+                "TNF_IDINSTTAR, " +
+                "TNF_DHCRIACAO, " +
+                "NUNOTA" +
+                ") VALUES (" +
+                contexto.getIdInstanceProcesso() + ", " +
+                "0, " +
+                "SYSDATE, " +
+                nunota +
+                ")";
+
+            query.update(sqlInsert);
+
+            log.info("Vínculo criado na TGFCAB_TNF com IDINSTTAR=0 e NUNOTA=" + nunota);
         } catch (Exception e) {
             log.error(e);
             throw new RuntimeException(e);
