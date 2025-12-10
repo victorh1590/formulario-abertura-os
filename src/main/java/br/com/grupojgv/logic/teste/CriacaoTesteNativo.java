@@ -29,8 +29,8 @@ public class CriacaoTesteNativo implements TarefaJava {
             jdbc = EntityFacadeFactory.getDWFFacade().getJdbcWrapper();
             query = new NativeSql(jdbc);
 
-            query.appendSql("INSERT INTO AD_TESTETAB_WF (SW_IDINSTPRN, SW_IDINSTTAR, SW_IDTAREFA, SW_DBSTATE, DESCRICAO) ");
-            query.appendSql("VALUES (:IDINSTPRN, :IDINSTTAR, :IDTAREFA, :DBSTATE, :DESCRICAO)");
+            query.appendSql("INSERT INTO AD_TESTETAB_WF (SW_IDINSTPRN, SW_IDINSTTAR, SW_IDTAREFA, SW_DBSTATE, SW_SEQREGISTRO, SW_MODIFIED, DESCRICAO) ");
+            query.appendSql("VALUES (:IDINSTPRN, :IDINSTTAR, :IDTAREFA, :DBSTATE, :SEQREGISTRO, :MODIFIED, :DESCRICAO)");
 
             BigDecimal idinstprn = (BigDecimal) contexto.getIdInstanceProcesso();
             @Nullable String idtarefa = SafeUtils.tryGet(() -> {
@@ -42,10 +42,10 @@ public class CriacaoTesteNativo implements TarefaJava {
             query.setNamedParameter("IDINSTTAR", BigDecimal.ZERO);
             query.setNamedParameter("IDTAREFA", idtarefa);
             query.setNamedParameter("DBSTATE", "I");
+            query.setNamedParameter("SEQREGISTRO", 0);
+            query.setNamedParameter("MODIFIED", "DESCRICAO");
             query.setNamedParameter("DESCRICAO", "ABC");
-
             query.executeUpdate();
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception("Error inserting into TNF table: " + e.getMessage());
