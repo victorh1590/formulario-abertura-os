@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.sql.Clob;
 
 @Builder
-public class FormAberturaOS {
+public class FormAberturaOS implements FormularioFormatado {
     @Setter @Getter @Nullable private BigDecimal IDINSTPRN;
     @Setter @Getter @Nullable private BigDecimal IDINSTTAR;
     @Setter @Getter @Nullable private BigDecimal CODREGISTRO;
