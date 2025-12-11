@@ -1,4 +1,4 @@
-package br.com.grupojgv.logic.task;
+package br.com.grupojgv.routine.task;
 
 import br.com.grupojgv.model.OrcamentoOS;
 import br.com.grupojgv.utils.CommandUtils;
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 
 @JBossLog
-public class PrefillOrcamentoOS implements TarefaJava {
+public class PrefillFormatado implements TarefaJava {
     @Override
     public void executar(ContextoTarefa contexto) throws Exception {
         log.info("%%%><START> INICIALIZANDO AD_ORCAMENTOOS </START><%%%");

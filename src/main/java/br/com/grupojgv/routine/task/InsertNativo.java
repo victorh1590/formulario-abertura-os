@@ -1,4 +1,4 @@
-package br.com.grupojgv.logic.teste;
+package br.com.grupojgv.routine.task;
 
 import br.com.grupojgv.query.ProcessoQuery;
 import br.com.grupojgv.utils.SafeUtils;
@@ -12,10 +12,9 @@ import lombok.extern.jbosslog.JBossLog;
 
 import javax.annotation.Nullable;
 import java.math.BigDecimal;
-import java.util.StringJoiner;
 
 @JBossLog
-public class CriacaoTesteNativo implements TarefaJava {
+public class InsertNativo implements TarefaJava {
     @Override
     public void executar(ContextoTarefa contexto) throws Exception {
         log.info("%%%><START> INICIALIZANDO AD_TESTETAB_WF </START><%%%");
@@ -35,7 +34,7 @@ public class CriacaoTesteNativo implements TarefaJava {
             BigDecimal idinstprn = (BigDecimal) contexto.getIdInstanceProcesso();
             @Nullable String idtarefa = SafeUtils.tryGet(() -> {
                 ProcessoQuery processoQuery = new ProcessoQuery();
-                return processoQuery.findIdTarefa(idinstprn, "AD_TESTETAB");
+                return processoQuery.IDELEMENTO(idinstprn, "AD_TESTETAB");
             }).orElse(null);
 
             query.setNamedParameter("IDINSTPRN", idinstprn);

@@ -13,7 +13,7 @@ import java.util.StringJoiner;
 
 @JBossLog
 public class ProcessoQuery extends BaseQuery {
-    public String findIdTarefa(BigDecimal idinstprn, String nome) throws Exception {
+    public String IDELEMENTO(BigDecimal idinstprn, String nome) throws Exception {
         String idTarefa = null;
         JapeSession.SessionHandle hnd = null;
         JdbcWrapper jdbc = null;
@@ -42,13 +42,47 @@ public class ProcessoQuery extends BaseQuery {
             } finally {
                 pstm.close();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new Exception("Error inserting into TNF table: " + e.getMessage());
         } finally {
             JdbcWrapper.closeSession(jdbc);
             JapeSession.close(hnd);
         }
         return idTarefa;
+    }
+
+    public BigDecimal IDINSTTAR(BigDecimal idinstprn, String idelemento) throws Exception {
+        BigDecimal idinsttar = null;
+        JapeSession.SessionHandle hnd = null;
+        JdbcWrapper jdbc = null;
+        try {
+            hnd = JapeSession.open();
+            hnd.setCanTimeout(false);
+            hnd.setPriorityLevel(JapeSession.LOW_PRIORITY);
+            jdbc = EntityFacadeFactory.getDWFFacade().getJdbcWrapper();
+            jdbc.openSession();
+
+            PreparedStatement pstm = jdbc.getPreparedStatement(
+                (new StringJoiner(System.lineSeparator()))
+                    .add("SELECT TASKINSTANCEID ")
+                    .add("FROM VWFITAR ")
+                    .add("WHERE PROCESSINSTANCEID = ? AND TASKIDELEMENTO = ? AND ROWNUM = 1 ")
+                    .add("ORDER BY TASKINSTANCEID DESC ")
+                    .toString()
+            );
+
+            pstm.setBigDecimal(1, idinstprn);
+            pstm.setString(2, idelemento);
+
+            try (ResultSet rs = pstm.executeQuery();) {
+                if(rs.next()) {
+                    idinsttar = rs.getBigDecimal("TASKINSTANCEID");
+                }
+            } finally {
+                pstm.close();
+            }
+        } finally {
+            JdbcWrapper.closeSession(jdbc);
+            JapeSession.close(hnd);
+        }
+        return idinsttar;
     }
 }

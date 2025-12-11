@@ -1,4 +1,4 @@
-package br.com.grupojgv.logic.formevent;
+package br.com.grupojgv.routine.formevent;
 
 import br.com.grupojgv.command.FormAberturaOSCommand;
 import br.com.grupojgv.model.FormAberturaOS;

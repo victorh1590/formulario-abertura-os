@@ -1,4 +1,4 @@
-package br.com.grupojgv.logic.task;
+package br.com.grupojgv.routine.task;
 
 import br.com.grupojgv.query.ProcessoQuery;
 import br.com.grupojgv.utils.SafeUtils;
@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 import java.util.StringJoiner;
 
 @JBossLog
-public class CriacaoOrcamentoOS implements TarefaJava {
+public class InsertTela implements TarefaJava {
     @Override
     public void executar(ContextoTarefa contexto) throws Exception {
         log.info("%%%><START> INICIALIZANDO TGFPAR_TNF </START><%%%");
@@ -43,7 +43,7 @@ public class CriacaoOrcamentoOS implements TarefaJava {
             BigDecimal idinstprn = (BigDecimal) contexto.getIdInstanceProcesso();
             @Nullable String idtarefa = SafeUtils.tryGet(() -> {
                 ProcessoQuery processoQuery = new ProcessoQuery();
-                return processoQuery.findIdTarefa(idinstprn, "Parceiro");
+                return processoQuery.IDELEMENTO(idinstprn, "Parceiro");
             }).orElse(null);
 
             query.setNamedParameter("IDINSTPRN", idinstprn);
