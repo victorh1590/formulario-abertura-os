@@ -8,6 +8,7 @@ import br.com.sankhya.jape.core.JapeSession;
 import br.com.sankhya.jape.dao.JdbcWrapper;
 import br.com.sankhya.jape.sql.NativeSql;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
+import br.com.sankhya.workflow.model.engine.DefaultProcessEngineService;
 import lombok.extern.jbosslog.JBossLog;
 
 import javax.annotation.Nullable;
@@ -22,6 +23,7 @@ public class InsertOrcamentoOSNativo implements TarefaJava {
         JapeSession.SessionHandle hnd = null;
         JdbcWrapper jdbc = null;
         NativeSql insert = null;
+        NativeSql twfivarUpd = null;
         try {
             hnd = JapeSession.open();
             hnd.setCanTimeout(false);
@@ -43,7 +45,7 @@ public class InsertOrcamentoOSNativo implements TarefaJava {
                     .add("CODCENCUS").add("CODVEICULO").add("AD_CODOAT")
                     .add("NUMNOTA").add("AD_HORIMETRO").add("CODTIPOPER")
                     .add("CODTIPVENDA").add("AD_FLAGVEIDIFPARC")
-                    .add("AD_TIPODEOS");
+                    .add("AD_CODTIPODEOS");
 
             StringJoiner params =
                 (new StringJoiner(", "))
@@ -55,7 +57,7 @@ public class InsertOrcamentoOSNativo implements TarefaJava {
                     .add(":CODCENCUS").add(":CODVEICULO").add(":AD_CODOAT")
                     .add(":NUMNOTA").add(":AD_HORIMETRO").add(":CODTIPOPER")
                     .add(":CODTIPVENDA").add(":AD_FLAGVEIDIFPARC")
-                    .add(":AD_TIPODEOS");
+                    .add(":AD_CODTIPODEOS");
 
             insert.appendSql(String.format("INSERT INTO TGFCAB_WF (%s, %s) ", fields, modified));
             insert.appendSql(String.format("VALUES (%s)", params));
@@ -75,7 +77,7 @@ public class InsertOrcamentoOSNativo implements TarefaJava {
                 BigDecimal adcodoat = new BigDecimal(6);
                 // 1	GARANTIA
                 // 2	ATENDIMENTO CLIENTE
-//                BigDecimal adtipodeos = new BigDecimal(2);
+                BigDecimal adtipodeos = new BigDecimal(2);
                 BigDecimal numnota = BigDecimal.ZERO;
                 BigDecimal adhorimetro = qe.getBigDecimal("HORIMETRO");
                 String adflagveidifparc = "S";
@@ -83,7 +85,7 @@ public class InsertOrcamentoOSNativo implements TarefaJava {
                 // Add parameters and save instance of task
                 insert.setNamedParameter("IDINSTPRN", idinstprn);
                 insert.setNamedParameter("IDINSTTAR", BigDecimal.ZERO);
-                insert.setNamedParameter("IDTAREFA", Flow.ORCAMENTO.getIdtarefa());
+                insert.setNamedParameter("IDTAREFA", "UserTask_1vyf2vt");
                 insert.setNamedParameter("DBSTATE", "I");
                 insert.setNamedParameter("SEQREGISTRO", 0);
                 insert.setNamedParameter("MODIFIED", modified.toString().replace(" ", ""));
@@ -99,12 +101,37 @@ public class InsertOrcamentoOSNativo implements TarefaJava {
                 insert.setNamedParameter("CODTIPOPER", 1004);
                 insert.setNamedParameter("CODTIPVENDA", 25);
                 insert.setNamedParameter("AD_FLAGVEIDIFPARC", adflagveidifparc);
-                insert.setNamedParameter("AD_TIPODEOS", adtipodeos);
+                insert.setNamedParameter("AD_CODTIPODEOS", adtipodeos);
+                insert.executeUpdate();
+
+                qe.reset();
+                qe.nativeSelect(
+                    String.format(
+                        "SELECT NUNOTA FROM TGFCAB_WF " +
+                        "WHERE SW_IDINSTPRN = %s AND SW_IDINSTTAR = %s AND SW_IDTAREFA = %s",
+                        idinstprn.toString(),
+                        BigDecimal.ZERO,
+                        Flow.ORCAMENTO.getIdtarefa()
+                    )
+                );
+                if(qe.next()) {
+                    BigDecimal nunota = qe.getBigDecimal("NUNOTA");
+                    twfivarUpd = new NativeSql(jdbc);
+                    twfivarUpd.cleanParameters();
+                    twfivarUpd.resetSqlBuf();
+                    twfivarUpd.appendSql("INSERT INTO TWFIVAR (IDINSTPRN, IDINSTTAR, NOME, TIPO, VALORDEC) ");
+                    twfivarUpd.appendSql("VALUES (:PRN, 0, 'NUNOTA', 'I', :VALOR)");
+
+                    twfivarUpd.setNamedParameter("PRN", idinstprn);
+                    twfivarUpd.setNamedParameter("VALOR", nunota);
+                    twfivarUpd.executeUpdate();
+
+                    DefaultProcessEngineService.getInstance().setVariable(idinstprn.toString(), "NUNOTA", nunota);
+                }
 
                 String str = insert.getSqlBuf().toString();
                 log.info(str);
 
-                insert.executeUpdate();
             } else {
                 throw new Exception("Não foi possível gerar o Orçamento.");
             }

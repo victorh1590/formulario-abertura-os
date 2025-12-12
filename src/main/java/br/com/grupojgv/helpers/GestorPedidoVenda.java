@@ -20,6 +20,56 @@ public class GestorPedidoVenda {
     /**
      * Cria apenas o cabeçalho da Nota/Pedido (TGFCAB) contendo 1 item.
      *
+     * @param cabecalhoXml Cabeçalho XML (TGFCAB)
+     * @return O NUNOTA gerado.
+     * @throws Exception Em caso de erro nas regras de negócio.
+     */
+    public BigDecimal gerarPedido(Element cabecalhoXml) throws Exception {
+        JapeSession.SessionHandle hnd = null;
+        BigDecimal nuNotaGerada = null;
+
+        try {
+            hnd = JapeSession.open();
+
+            // 1. Preparação do Contexto (Necessário para simular uma requisição da tela)
+            ServiceContext sctx = ServiceContext.getCurrent(); // Se estiver rodando numa ação
+            if (sctx == null) {
+                // Se estiver num Job sem contexto HTTP, é necessário criar um contexto fictício ou garantir AuthInfo
+                sctx = new ServiceContext(null);
+                sctx.setAutentication(AuthenticationInfo.getCurrent());
+            }
+
+            // Configura propriedades de sessão necessárias para a Central de Notas
+            SPBeanUtils.setupContext(sctx);
+            CACHelper.setupContext(sctx);
+
+            // 2. Instancia o Helper da Central (O motor de regras)
+            CACHelper cacHelper = new CACHelper();
+
+
+            // O NUNOTA deve ser nulo para inclusão, ou passado para alteração
+            // O CACHelper vai calcular impostos iniciais, numeração, etc.
+            BarramentoRegra regraCab = cacHelper.incluirAlterarCabecalho(sctx, cabecalhoXml);
+
+            // Recupera o NUNOTA gerado pelo sistema
+            // O BarramentoRegra contém as PKs envolvidas na transação
+            nuNotaGerada = new BigDecimal(regraCab.getDadosBarramento().getPksEnvolvidas().iterator().next().getValues()[0].toString());
+
+            System.out.println("Cabeçalho criado. NUNOTA: " + nuNotaGerada);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Erro ao gerar pedido: " + e.getMessage());
+        } finally {
+            JapeSession.close(hnd);
+        }
+
+        return nuNotaGerada;
+    }
+
+    /**
+     * Cria apenas o cabeçalho da Nota/Pedido (TGFCAB) contendo 1 item.
+     *
      * @param codTop Código do Tipo de Operação (TGFTOP)
      * @param codParc Código do Parceiro (TGFPAR)
      * @param codEmp Código da Empresa (TSIEMP)
