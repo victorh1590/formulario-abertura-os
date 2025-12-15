@@ -1,12 +1,14 @@
 package br.com.grupojgv.routine.task;
 
 import br.com.grupojgv.helpers.GestorPedidoVenda;
+import br.com.sankhya.extensions.actionbutton.QueryExecutor;
+import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.extensions.flow.ContextoEvento;
 import br.com.sankhya.extensions.flow.EventoProcessoJava;
+import com.sankhya.util.BigDecimalUtil;
+import com.sankhya.util.JsonUtils;
 import com.sankhya.util.TimeUtils;
-import com.sankhya.util.XMLUtils;
 import lombok.extern.jbosslog.JBossLog;
-import org.jdom.Element;
 
 import java.math.BigDecimal;
 
@@ -15,49 +17,77 @@ public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
     @Override
     public void executar(ContextoEvento contexto) throws Exception {
         log.info("%%%><START> INICIALIZANDO AD_ORCAMENTOOS </START><%%%");
-        Object codparc = contexto.getCampo("CODPARC");
-        Object codemp = contexto.getCampo("CODEMP");
-        Object codtipoper = contexto.getCampo("CODTIPOPER");
+        QueryExecutor qe = null;
+        try {
+            qe = contexto.getQuery();
+            Registro[] registros = contexto.getLinhasFormulario("AD_ORCAMENTOOS");
+            if(registros.length < 1) {
+                throw new IllegalArgumentException("Não foi possível obter dados do formulário AD_ORCAMENTOOS.");
+            }
+            Registro r = registros[0];
 
-        Object adcodoat = contexto.getCampo("AD_CODOAT");
-        Object adflagveidifparc = contexto.getCampo("AD_FLAGVEIDIFPARC");
-        Object adhorimetro = contexto.getCampo("AD_HORIMETRO");
-        Object adtipodeos= contexto.getCampo("AD_TIPODEOS");
-        Object codcencus = contexto.getCampo("CODCENCUS");
-        Object codnat = contexto.getCampo("CODNAT");
-        Object codregistro = contexto.getCampo("CODREGISTRO");
-        Object codtipvenda = contexto.getCampo("CODTIPVENDA");
-        Object codveiculo = contexto.getCampo("CODVEICULO");
-        Object codvend = contexto.getCampo("CODVEND");
+            Object idinstprn = contexto.getIdInstanceProcesso();
 
-        // -----------------------------------------------------------
-        // Criar o Cabeçalho (TGFCAB)
-        // -----------------------------------------------------------
-        Element cabecalhoXml = new Element("Cabecalho");
+            Object nunota = null;
+            Object dtneg = TimeUtils.getNow();
+            Object tipmov = "P";
+            Object numnota = BigDecimal.ZERO;
+            Object adacaogeradora = "SANKHYA FLOW";
+            Object obs = String.format(
+                "GERADO AUTOMATICAMENTE PELA SOLICITACAO NRO. %s DO FLUXO \"ABERTURA DE OS\" DO SANKHYA FLOW",
+                idinstprn
+            );
 
-        // Campos obrigatórios mínimos
-        XMLUtils.addContentElement(cabecalhoXml, "NUNOTA", 0); // NUNOTA
-        XMLUtils.addContentElement(cabecalhoXml, "CODTIPOPER", codtipoper); // TOP
-        XMLUtils.addContentElement(cabecalhoXml, "CODPARC", codparc); // Parceiro
-        XMLUtils.addContentElement(cabecalhoXml, "CODEMP", codemp); // Empresa
-        XMLUtils.addContentElement(cabecalhoXml, "DTNEG", TimeUtils.formataDDMMYYYY(TimeUtils.getNow())); // Data
-        XMLUtils.addContentElement(cabecalhoXml, "TIPMOV", "P"); // P = Pedido de Venda
+            Object codparc = r.getCampo("CODPARC");
+            Object codemp = r.getCampo("CODEMP");
+            Object codtipoper = r.getCampo("CODTIPOPER");
+            Object adcodoat = r.getCampo("AD_CODOAT");
+            Object adflagveidifparc = r.getCampo("AD_FLAGVEIDIFPARC");
+            Object adhorimetro = r.getCampo("AD_HORIMETRO");
+            Object adtipodeos= r.getCampo("AD_TIPODEOS");
+            Object codcencus = r.getCampo("CODCENCUS");
+            Object codnat = r.getCampo("CODNAT");
+            Object codtipvenda = r.getCampo("CODTIPVENDA");
+            Object codveiculo = r.getCampo("CODVEICULO");
+            Object codvend = r.getCampo("CODVEND");
 
-        // Campos opcionais
-        XMLUtils.addContentElement(cabecalhoXml, "AD_CODOAT", adcodoat); // Origem do Atendimento
-        XMLUtils.addContentElement(cabecalhoXml, "AD_FLAGVEIDIFPARC", adflagveidifparc); // Flag
-        XMLUtils.addContentElement(cabecalhoXml, "AD_HORIMETRO", adhorimetro); // Horímetro
-        XMLUtils.addContentElement(cabecalhoXml, "AD_CODTIPODEOS", adtipodeos); // Tipo de OS
-        XMLUtils.addContentElement(cabecalhoXml, "CODCENCUS", codcencus); // Centro de Custo
-        XMLUtils.addContentElement(cabecalhoXml, "CODNAT", codnat); // Natureza
-        XMLUtils.addContentElement(cabecalhoXml, "CODREGISTRO", codregistro); // Cód. Registro
-        XMLUtils.addContentElement(cabecalhoXml, "CODTIPVENDA", codtipvenda); // Cód. Tipo de Negociação
-        XMLUtils.addContentElement(cabecalhoXml, "CODVEICULO", codveiculo); // Cód. Veículo
-        XMLUtils.addContentElement(cabecalhoXml, "CODVEND", codvend); // Cód. Vendedor
+            CabecalhoNota.CabecalhoNotaBuilder builder = CabecalhoNota.builder()
+                .NUNOTA(nunota)
+                .CODTIPOPER(codtipoper)
+                .CODPARC(codparc)
+                .CODEMP(codemp)
+                .DTNEG(dtneg)
+                .TIPMOV(tipmov)
+                .NUMNOTA(numnota)
+                .CODCENCUS(codcencus)
+                .CODNAT(codnat)
+                .CODTIPVENDA(codtipvenda)
+                .CODVEICULO(codveiculo)
+                .CODVEND(codvend)
+                .AD_CODOAT(adcodoat)
+                .AD_FLAGVEIDIFPARC(adflagveidifparc)
+                .AD_HORIMETRO(adhorimetro)
+                .AD_CODTIPODEOS(adtipodeos)
+                .AD_ACAOGERADORA(adacaogeradora)
+                .OBSERVACAO(obs)
+                .OBSERVACAOAC(obs);
+            CabecalhoNota.loadTop(qe, builder, codtipoper);
+            CabecalhoNota.loadTpv(qe, builder, codtipvenda);
+            CabecalhoNota cab = builder.build();
+            String json = JsonUtils.converteObjectToString(cab);
+            log.info("CAB: " + json);
 
-        GestorPedidoVenda gestorPedidoVenda = new GestorPedidoVenda();
-        BigDecimal nunota = gestorPedidoVenda.gerarPedido(cabecalhoXml);
-
-        log.info("%%%><END> ENCERRANDO AD_ORCAMENTOOS </END><%%%");
+            GestorPedidoVenda gestorPedidoVenda = new GestorPedidoVenda();
+            nunota = gestorPedidoVenda.criarCabecalho(cab);
+            if((BigDecimalUtil.getBigDecimal(nunota)).compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Não foi retornado valor válido para a chave do orçamento criado.");
+            }
+            r.setCampo("NUNOTA", nunota);
+        } finally {
+            if(qe != null) {
+                qe.close();
+            }
+            log.info("%%%><END> ENCERRANDO AD_ORCAMENTOOS </END><%%%");
+        }
     }
 }
