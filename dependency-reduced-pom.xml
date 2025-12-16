@@ -4,7 +4,7 @@
   <groupId>br.com.grupojgv</groupId>
   <artifactId>flow-abertura-os</artifactId>
   <name>flow-abertura-os</name>
-  <version>173.0.0</version>
+  <version>174.0.0</version>
   <url>http://maven.apache.org</url>
   <build>
     <plugins>

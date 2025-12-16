@@ -9,8 +9,14 @@ import com.sankhya.util.BigDecimalUtil;
 import com.sankhya.util.JsonUtils;
 import com.sankhya.util.TimeUtils;
 import lombok.extern.jbosslog.JBossLog;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
 @JBossLog
 public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
@@ -83,6 +89,39 @@ public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
                 throw new IllegalArgumentException("Não foi retornado valor válido para a chave do orçamento criado.");
             }
             r.setCampo("NUNOTA", nunota);
+
+            // Fazer envio de Aviso.
+            BigDecimal codusu = contexto.getUsuarioLogado();
+            NotificacaoFacade notificacaoFacade = new NotificacaoFacade();
+
+            PropertiesConfiguration cfg = (new Configurations()).properties(new File("application.properties"));
+            Map<String, String> resourceProperties = new HashMap<>();
+            resourceProperties.put("NUNOTA", nunota.toString());
+            String resource =
+                String.format(
+                    "%s?%s",
+                    cfg.getProperty("sankhya.resource.orcamento").toString(),
+                    JsonUtils.getGson().toJson(resourceProperties)
+                );
+            String url = SankhyaUrlBuilder.builder()
+                .protocol("https")
+                .host(cfg.getProperty("sankhya.url").toString())
+                .module(cfg.getProperty("sankhya.module").toString())
+                .path("system.jsp#app")
+                .path(Base64.getEncoder().encodeToString(resource.getBytes()))
+                .build()
+                .url();
+            String link = String.format("<a href=%s>%s</a>", url, nunota);
+            log.info("URL: " + url);
+            log.info("LINK: " + link);
+
+            notificacaoFacade.enviarAvisoUsuario(
+                codusu,
+                "Workflow de Abertura de OS #" + idinstprn,
+                "Foi gerado o orçamento #" + link,
+                3
+            );
+            // Colocar campo calculado HTML linkando para OS.
         } finally {
             if(qe != null) {
                 qe.close();
