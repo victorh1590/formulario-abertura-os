@@ -2,6 +2,7 @@ package br.com.grupojgv.routine.task;
 
 import br.com.sankhya.jape.vo.DynamicVO;
 import br.com.sankhya.jape.vo.EntityVO;
+import br.com.sankhya.modelcore.auth.AuthenticationInfo;
 import br.com.sankhya.modelcore.util.EntityFacadeFactory;
 import br.com.sankhya.jape.EntityFacade;
 import java.math.BigDecimal;
@@ -29,7 +30,7 @@ public class NotificacaoFacade {
         avisoVO.setProperty("TIPO", "P"); // P = Personalizado
         avisoVO.setProperty("DHCRIACAO", new Timestamp(System.currentTimeMillis()));
         // Opcional: Definir quem enviou (pode ser o usuário logado ou null para 'Sistema')
-        // avisoVO.setProperty("CODUSUREMETENTE", AuthenticationInfo.getCurrent().getUserID());
+        avisoVO.setProperty("CODUSUREMETENTE", BigDecimal.ZERO);
         dwfFacade.createEntity("AvisoSistema", (EntityVO) avisoVO);
     }
 

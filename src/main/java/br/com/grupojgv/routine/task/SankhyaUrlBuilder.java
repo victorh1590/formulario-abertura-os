@@ -37,7 +37,7 @@ public class SankhyaUrlBuilder {
         if(params != null && !params.isEmpty()) {
             sb.append(paramConnector);
             for(String key: params.keySet()) {
-                sb.append("&").append(key).append("=").append(params.get(key));
+                sb.append(key).append("=").append(params.get(key));
             }
         }
         return sb.toString();

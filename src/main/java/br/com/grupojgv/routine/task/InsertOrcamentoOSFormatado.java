@@ -5,18 +5,15 @@ import br.com.sankhya.extensions.actionbutton.QueryExecutor;
 import br.com.sankhya.extensions.actionbutton.Registro;
 import br.com.sankhya.extensions.flow.ContextoEvento;
 import br.com.sankhya.extensions.flow.EventoProcessoJava;
+import com.google.gson.JsonObject;
 import com.sankhya.util.BigDecimalUtil;
 import com.sankhya.util.JsonUtils;
 import com.sankhya.util.TimeUtils;
 import lombok.extern.jbosslog.JBossLog;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.aeonbits.owner.ConfigFactory;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 
 @JBossLog
 public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
@@ -32,8 +29,16 @@ public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
             }
             Registro r = registros[0];
 
-            Object idinstprn = contexto.getIdInstanceProcesso();
+            //
+            BigDecimal nunotaExistente = BigDecimalUtil.getBigDecimal(r.getCampo("NUNOTA"));
 
+            if (nunotaExistente != null && nunotaExistente.compareTo(BigDecimal.ZERO) > 0) {
+                log.warn("ATENCAO: Tentativa de re-execucao detectada. Pedido ja criado: " + nunotaExistente);
+                return;
+            }
+            //
+
+            Object idinstprn = contexto.getIdInstanceProcesso();
             Object nunota = null;
             Object dtneg = TimeUtils.getNow();
             Object tipmov = "P";
@@ -89,38 +94,10 @@ public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
                 throw new IllegalArgumentException("Não foi retornado valor válido para a chave do orçamento criado.");
             }
             r.setCampo("NUNOTA", nunota);
+            r.save();
 
-            // Fazer envio de Aviso.
-            BigDecimal codusu = contexto.getUsuarioLogado();
-            NotificacaoFacade notificacaoFacade = new NotificacaoFacade();
+            enviarAviso(contexto, (BigDecimal) idinstprn, (BigDecimal) nunota, (String) tipmov, (BigDecimal) codtipoper);
 
-            PropertiesConfiguration cfg = (new Configurations()).properties(new File("application.properties"));
-            Map<String, String> resourceProperties = new HashMap<>();
-            resourceProperties.put("NUNOTA", nunota.toString());
-            String resource =
-                String.format(
-                    "%s?%s",
-                    cfg.getProperty("sankhya.resource.orcamento").toString(),
-                    JsonUtils.getGson().toJson(resourceProperties)
-                );
-            String url = SankhyaUrlBuilder.builder()
-                .protocol("https")
-                .host(cfg.getProperty("sankhya.url").toString())
-                .module(cfg.getProperty("sankhya.module").toString())
-                .path("system.jsp#app")
-                .path(Base64.getEncoder().encodeToString(resource.getBytes()))
-                .build()
-                .url();
-            String link = String.format("<a href=%s>%s</a>", url, nunota);
-            log.info("URL: " + url);
-            log.info("LINK: " + link);
-
-            notificacaoFacade.enviarAvisoUsuario(
-                codusu,
-                "Workflow de Abertura de OS #" + idinstprn,
-                "Foi gerado o orçamento #" + link,
-                3
-            );
             // Colocar campo calculado HTML linkando para OS.
         } finally {
             if(qe != null) {
@@ -128,5 +105,51 @@ public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
             }
             log.info("%%%><END> ENCERRANDO AD_ORCAMENTOOS </END><%%%");
         }
+    }
+
+    private void enviarAviso(ContextoEvento contexto, BigDecimal idinstprn, BigDecimal nunota, String tipmov, BigDecimal codtipoper) throws Exception {
+        // Fazer envio de Aviso.
+        BigDecimal codusu = contexto.getUsuarioLogado();
+        NotificacaoFacade notificacaoFacade = new NotificacaoFacade();
+
+        SankhyaProperties cfg = ConfigFactory.create(SankhyaProperties.class);
+
+        String forceNewHash = String.valueOf(System.currentTimeMillis());
+        JsonObject json = new JsonObject();
+        json.addProperty("NUNOTA", nunota);
+        json.addProperty("TIPMOV", tipmov);
+        json.addProperty("ehPedidoW", false);
+        json.addProperty("CODTIPOPER", codtipoper);
+        json.addProperty("TIPOPORTAL", "PV");
+        json.addProperty("forceNewHash", forceNewHash);
+        String resource = String.format("%s?%s", cfg.sankhyaOrcamento(), json);
+        String url = SankhyaUrlBuilder.builder()
+            .protocol("https")
+            .host(cfg.sankhyaUrl())
+            .module(cfg.sankhyaModule())
+            .path("system.jsp#app")
+            .path(Base64.getEncoder().encodeToString(resource.getBytes()))
+            .paramConnector("&")
+            .param("pk-refresh", forceNewHash)
+            .build()
+            .url();
+        String link = getButton(nunota, url);
+        log.info("URL: " + url);
+        log.info("LINK: " + link);
+
+        String title = "Workflow de Abertura de OS " + idinstprn;
+        notificacaoFacade.enviarAvisoUsuario(codusu, title, link, 3);
+    }
+
+    private String getButton(Object nunota, String url) {
+        String htmlTemplate = "<a href=\"%s\" target=\"_top\" " +
+            "class=\"btn btn-primary btn-sm\" " +
+            "style=\"background-color: #007bff; border: 1px solid #007bff; " +
+            "color: #ffffff; padding: 5px 10px; text-align: center; " +
+            "text-decoration: none; display: inline-block; font-size: 12px; " +
+            "border-radius: 4px; font-family: sans-serif; cursor: pointer;\">" +
+            "Abrir Orçamento %s" +
+            "</a>";
+        return String.format(htmlTemplate, url, nunota);
     }
 }

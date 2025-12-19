@@ -4,7 +4,7 @@
     <groupId>br.com.grupojgv</groupId>
     <artifactId>flow-abertura-os</artifactId>
     <packaging>jar</packaging>
-    <version>174.0.0</version>
+    <version>192.0.0</version>
     <name>flow-abertura-os</name>
     <url>http://maven.apache.org</url>
     <properties>
@@ -236,16 +236,10 @@
             <version>2.1</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-configuration2</artifactId>
-            <version>2.13.0</version>
+            <groupId>org.aeonbits.owner</groupId>
+            <artifactId>owner</artifactId>
+            <version>1.0.12</version>
         </dependency>
-        <dependency>
-            <groupId>commons-beanutils</groupId>
-            <artifactId>commons-beanutils</artifactId>
-            <version>1.11.0</version>
-        </dependency>
-
         <dependency>
             <groupId>com.google.http-client</groupId>
             <artifactId>google-http-client</artifactId>
