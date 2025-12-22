@@ -12,4 +12,6 @@ public interface SankhyaProperties extends Config {
     String sankhyaPortalVendas();
     @Key("sankhya.resource.nota")
     String sankhyaOrcamento();
+    @Key("sankhya.resource.mov")
+    String sankhyaCentralNotas();
 }

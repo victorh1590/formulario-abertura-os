@@ -116,13 +116,14 @@ public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
 
         String forceNewHash = String.valueOf(System.currentTimeMillis());
         JsonObject json = new JsonObject();
-        json.addProperty("NUNOTA", nunota);
-        json.addProperty("TIPMOV", tipmov);
-        json.addProperty("ehPedidoW", false);
-        json.addProperty("CODTIPOPER", codtipoper);
-        json.addProperty("TIPOPORTAL", "PV");
-        json.addProperty("forceNewHash", forceNewHash);
-        String resource = String.format("%s?%s", cfg.sankhyaOrcamento(), json);
+//        json.addProperty("NUNOTA", nunota);
+//        json.addProperty("TIPMOV", tipmov);
+//        json.addProperty("ehPedidoW", false);
+//        json.addProperty("CODTIPOPER", codtipoper);
+//        json.addProperty("TIPOPORTAL", "PV");
+//        json.addProperty("forceNewHash", forceNewHash);
+        json.addProperty("NUNOTA", nunota.toString());
+        String resource = String.format("%s?%s", cfg.sankhyaCentralNotas(), json);
         String url = SankhyaUrlBuilder.builder()
             .protocol("https")
             .host(cfg.sankhyaUrl())
@@ -143,13 +144,11 @@ public class InsertOrcamentoOSFormatado implements EventoProcessoJava {
 
     private String getButton(Object nunota, String url) {
         String htmlTemplate = "<a href=\"%s\" target=\"_top\" " +
-            "class=\"btn btn-primary btn-sm\" " +
-            "style=\"background-color: #007bff; border: 1px solid #007bff; " +
-            "color: #ffffff; padding: 5px 10px; text-align: center; " +
-            "text-decoration: none; display: inline-block; font-size: 12px; " +
-            "border-radius: 4px; font-family: sans-serif; cursor: pointer;\">" +
+            "alt=\"Abrir Movimentação\" title=\"Abrir Movimentação\">" +
+            "<span heigth=\"35px\" width=\"100%%\">" +
+            "<button type=\"button\" class=\"btn btn-primary btn-sm\">" +
             "Abrir Orçamento %s" +
-            "</a>";
+            "</button></span></a>";
         return String.format(htmlTemplate, url, nunota);
     }
 }
